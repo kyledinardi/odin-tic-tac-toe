@@ -15,7 +15,15 @@ const gameboard = (function() {
     console.table(board);
   };
 
-  return {getBoard, addMark, printBoard};
+  const containsSpace = () => {
+    bool = true
+    board.forEach((row) => {
+      bool = row.includes(' ');
+    });
+    return bool;
+  };
+
+  return {getBoard, addMark, printBoard, containsSpace};
 })();
 
 function createPlayer(name, mark) {
@@ -44,9 +52,23 @@ const gameController = (function(playerOneName, playerTwoName) {
       console.log('That space is already marked.');
       return;
     }
+
     gameboard.addMark(row, column, currentPlayer.getMark());
+
+    if(checkWinConditions(row, column)){
+      gameboard.printBoard();
+      console.log(`${currentPlayer.getName()} wins.`)
+    } else if(!gameboard.containsSpace()) {
+      gameboard.printBoard();
+      console.log('All spaces filled. Game ends in a draw.')
+    } else {
     changeTurn();
     startNewRound();
+    }
+  };
+
+  const checkWinConditions = (row, column) => {
+
   };
 
   startNewRound();
@@ -55,3 +77,10 @@ const gameController = (function(playerOneName, playerTwoName) {
 
 gameController.playRound(0, 0);
 gameController.playRound(0, 1);
+gameController.playRound(0, 2);
+gameController.playRound(1, 0);
+gameController.playRound(1, 1);
+gameController.playRound(1, 2);
+gameController.playRound(2, 0);
+gameController.playRound(2, 1);
+gameController.playRound(2, 2);
