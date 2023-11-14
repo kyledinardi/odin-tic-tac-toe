@@ -1,24 +1,57 @@
 const gameboard = (function() {
-  let boardArray = [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '];
-  const getBoard = () => boardArray;
-  const boardChange = (index, value) => {
-    this.boardArray[index] = value;
-  }
-  return {getBoard, boardChange};
+  const board = [
+    [' ', ' ', ' '],
+    [' ', ' ', ' '],
+    [' ', ' ', ' ']
+  ];
+
+  const getBoard = () => board;
+
+  const addMark = (row, column, mark) => {
+    board[row][column] = mark;
+  };
+
+  const printBoard = () => {
+    console.table(board);
+  };
+
+  return {getBoard, addMark, printBoard};
 })();
 
-function createPlayer(name) {
-  let score = 0;
+function createPlayer(name, mark) {
   const getName = () => name;
-  const getScore = () => score;
-  const increaseScore = () => score++;
-  return {getName, getScore, increaseScore};
+  const getMark = () => mark;
+  return {getName, getMark};
 }
 
-const gameController = (function() {
-  return {};
-})();
+const gameController = (function(playerOneName, playerTwoName) {
+  const playerOne = createPlayer(playerOneName, 'x');
+  const playerTwo = createPlayer(playerTwoName, '○');
+  let currentPlayer = playerOne;
+  const getCurrentPlayer = () => currentPlayer;
 
-const displayController = (function() {
-  return {};
-})();
+  const changeTurn = () => {
+    currentPlayer = currentPlayer === playerOne ? playerTwo : playerOne;
+  };
+
+  const startNewRound = () => {
+    gameboard.printBoard();
+    console.log(`${currentPlayer.getName()}'s turn.`)
+  };
+
+  const playRound = (row, column) => {
+    if(gameboard.getBoard()[row][column] !== ' '){
+      console.log('That space is already marked.');
+      return;
+    }
+    gameboard.addMark(row, column, currentPlayer.getMark());
+    changeTurn();
+    startNewRound();
+  };
+
+  startNewRound();
+  return {getCurrentPlayer, playRound};
+})('Player one', 'Player two');
+
+gameController.playRound(0, 0);
+gameController.playRound(0, 1);
