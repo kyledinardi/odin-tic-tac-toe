@@ -16,11 +16,14 @@ const gameboard = (function() {
   };
 
   const containsSpace = () => {
-    bool = true
-    board.forEach((row) => {
-      bool = row.includes(' ');
-    });
-    return bool;
+    for(let i = 0; i < 3; i++){
+      for(let j = 0; j < 3; j++){
+        if(board[i][j] === ' '){
+          return true;
+        }
+      }
+    }
+    return false;
   };
 
   return {getBoard, addMark, printBoard, containsSpace};
@@ -37,6 +40,7 @@ const gameController = (function(playerOneName, playerTwoName) {
   const playerTwo = createPlayer(playerTwoName, '○');
   let currentPlayer = playerOne;
   const getCurrentPlayer = () => currentPlayer;
+  let isWin = false;
 
   const changeTurn = () => {
     currentPlayer = currentPlayer === playerOne ? playerTwo : playerOne;
@@ -48,6 +52,7 @@ const gameController = (function(playerOneName, playerTwoName) {
   };
 
   const playRound = (row, column) => {
+    if(isWin) return;
     if(gameboard.getBoard()[row][column] !== ' '){
       console.log('That space is already marked.');
       return;
@@ -55,9 +60,10 @@ const gameController = (function(playerOneName, playerTwoName) {
 
     gameboard.addMark(row, column, currentPlayer.getMark());
 
-    if(checkWinConditions(row, column)){
+    if(checkWin(row, column)){
       gameboard.printBoard();
       console.log(`${currentPlayer.getName()} wins.`)
+      isWin = true;
     } else if(!gameboard.containsSpace()) {
       gameboard.printBoard();
       console.log('All spaces filled. Game ends in a draw.')
@@ -67,20 +73,38 @@ const gameController = (function(playerOneName, playerTwoName) {
     }
   };
 
-  const checkWinConditions = (row, column) => {
+  const checkWin = (row, column) => {
+    const board = gameboard.getBoard();
 
+    if(
+      board[row][column] === board[row][(column + 1) % 3] && 
+      board[row][column] === board[row][(column + 2) % 3]
+      ) {
+      return true;
+    }
+
+    if(
+      board[row][column] === board[(row + 1) % 3][column] && 
+      board[row][column] === board[(row + 2) % 3][column]
+      ) {
+      return true;
+    }
+
+    if(row === column){
+      if(board[0][0] === board[1][1] && board[0][0] === board[2][2]) {
+        return true;
+      }
+    }
+
+    if(row === 2 - column){
+      if(board[0][2] === board[1][1] && board[0][2] === board[2][0]) {
+        return true;
+      }
+    }
+    
+    return false;
   };
 
   startNewRound();
   return {getCurrentPlayer, playRound};
 })('Player one', 'Player two');
-
-gameController.playRound(0, 0);
-gameController.playRound(0, 1);
-gameController.playRound(0, 2);
-gameController.playRound(1, 0);
-gameController.playRound(1, 1);
-gameController.playRound(1, 2);
-gameController.playRound(2, 0);
-gameController.playRound(2, 1);
-gameController.playRound(2, 2);
