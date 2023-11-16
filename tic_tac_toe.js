@@ -11,10 +11,6 @@ const gameboard = (function() {
     board[row][column] = mark;
   };
 
-  const printBoard = () => {
-    console.table(board);
-  };
-
   const containsSpace = () => {
     for(let i = 0; i < 3; i++){
       for(let j = 0; j < 3; j++){
@@ -26,7 +22,7 @@ const gameboard = (function() {
     return false;
   };
 
-  return {getBoard, addMark, printBoard, containsSpace};
+  return {getBoard, addMark, containsSpace};
 })();
 
 function createPlayer(name, mark) {
@@ -36,45 +32,39 @@ function createPlayer(name, mark) {
 }
 
 const gameController = (function(playerOneName, playerTwoName) {
-  const playerOne = createPlayer(playerOneName, 'x');
-  const playerTwo = createPlayer(playerTwoName, '○');
+  const playerOne = createPlayer(playerOneName, 'X');
+  const playerTwo = createPlayer(playerTwoName, 'O');
+  let isGameOver = false;
   let currentPlayer = playerOne;
+  let message = `${currentPlayer.getName()}'s Turn.`
   const getCurrentPlayer = () => currentPlayer;
-  let isWin = false;
+  const getMessage = () => message;
 
   const changeTurn = () => {
     currentPlayer = currentPlayer === playerOne ? playerTwo : playerOne;
   };
 
-  const startNewRound = () => {
-    gameboard.printBoard();
-    console.log(`${currentPlayer.getName()}'s turn.`)
-  };
-
   const playRound = (row, column) => {
-    if(isWin) return;
-    if(gameboard.getBoard()[row][column] !== ' '){
-      console.log('That space is already marked.');
-      return;
-    }
+    if(isGameOver || gameboard.getBoard()[row][column] !== ' ') return;
 
     gameboard.addMark(row, column, currentPlayer.getMark());
 
     if(checkWin(row, column)){
-      gameboard.printBoard();
-      console.log(`${currentPlayer.getName()} wins.`)
-      isWin = true;
+      message = `${currentPlayer.getName()} Wins.`;
+      isGameOver = true;
     } else if(!gameboard.containsSpace()) {
-      gameboard.printBoard();
-      console.log('All spaces filled. Game ends in a draw.')
+      message = 'Game Over: Draw.';
+      isGameOver = true;
     } else {
     changeTurn();
-    startNewRound();
+    message = `${currentPlayer.getName()}'s Turn.`
     }
   };
 
   const checkWin = (row, column) => {
     const board = gameboard.getBoard();
+    row = parseInt(row);
+    column = parseInt(column);
 
     if(
       board[row][column] === board[row][(column + 1) % 3] && 
@@ -82,20 +72,17 @@ const gameController = (function(playerOneName, playerTwoName) {
       ) {
       return true;
     }
-
     if(
       board[row][column] === board[(row + 1) % 3][column] && 
       board[row][column] === board[(row + 2) % 3][column]
       ) {
       return true;
     }
-
     if(row === column){
       if(board[0][0] === board[1][1] && board[0][0] === board[2][2]) {
         return true;
       }
     }
-
     if(row === 2 - column){
       if(board[0][2] === board[1][1] && board[0][2] === board[2][0]) {
         return true;
@@ -104,7 +91,41 @@ const gameController = (function(playerOneName, playerTwoName) {
     
     return false;
   };
+  
+  return {getCurrentPlayer, getMessage, playRound};
+})('Player 1', 'Player 2');
 
-  startNewRound();
-  return {getCurrentPlayer, playRound};
-})('Player one', 'Player two');
+const displayController = (function() {
+  const message = document.querySelector('.message');
+  const boardDiv = document.querySelector('.board')
+
+  const buildBoard = () => {
+    boardDiv.textContent = '';
+    const board = gameboard.getBoard();
+    message.textContent = gameController.getMessage();
+
+    board.forEach((row, i) => {
+      row.forEach((cell, j) => {
+        const cellBtn = document.createElement('button');
+        cellBtn.setAttribute('class', 'cell');
+        cellBtn.setAttribute('data-row', i);
+        cellBtn.setAttribute('data-column', j);
+        cellBtn.textContent = cell;
+        boardDiv.appendChild(cellBtn);
+      });
+    });
+  }
+
+  function clickHandler(e) {
+    const row = e.target.dataset.row;
+    const column = e.target.dataset.column;
+    
+    if(!row || !column) return;
+
+    gameController.playRound(e.target.dataset.row, e.target.dataset.column);
+    buildBoard();
+  }
+
+  boardDiv.addEventListener('click', clickHandler);
+  buildBoard();
+})();
