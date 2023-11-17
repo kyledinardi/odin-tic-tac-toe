@@ -1,5 +1,5 @@
 const gameboard = (function() {
-  const board = [
+  let board = [
     [' ', ' ', ' '],
     [' ', ' ', ' '],
     [' ', ' ', ' ']
@@ -22,7 +22,15 @@ const gameboard = (function() {
     return false;
   };
 
-  return {getBoard, addMark, containsSpace};
+  const resetBoard = () => {
+    board = [
+      [' ', ' ', ' '],
+      [' ', ' ', ' '],
+      [' ', ' ', ' ']
+    ];
+  };
+
+  return {getBoard, addMark, containsSpace, resetBoard};
 })();
 
 function createPlayer(name, mark) {
@@ -31,17 +39,26 @@ function createPlayer(name, mark) {
   return {getName, getMark};
 }
 
-const gameController = (function(playerOneName, playerTwoName) {
-  const playerOne = createPlayer(playerOneName, 'X');
-  const playerTwo = createPlayer(playerTwoName, 'O');
-  let isGameOver = false;
-  let currentPlayer = playerOne;
-  let message = `${currentPlayer.getName()}'s Turn.`
+const gameController = (function() {
+  let playerOne
+  let playerTwo
+  let isGameOver
+  let currentPlayer
+  let message
   const getCurrentPlayer = () => currentPlayer;
   const getMessage = () => message;
 
   const changeTurn = () => {
     currentPlayer = currentPlayer === playerOne ? playerTwo : playerOne;
+  };
+
+  const newGame = (playerOneName, playerTwoName) => {
+    playerOne = createPlayer(playerOneName, 'X');
+    playerTwo = createPlayer(playerTwoName, 'O');
+    currentPlayer = playerOne;
+    message = `${currentPlayer.getName()}'s Turn.`;
+    isGameOver = false;
+    gameboard.resetBoard();
   };
 
   const playRound = (row, column) => {
@@ -92,12 +109,13 @@ const gameController = (function(playerOneName, playerTwoName) {
     return false;
   };
   
-  return {getCurrentPlayer, getMessage, playRound};
-})('Player 1', 'Player 2');
+  return {getCurrentPlayer, getMessage, newGame, playRound};
+})();
 
 const displayController = (function() {
+  const resetBtn = document.querySelector('.reset');
   const message = document.querySelector('.message');
-  const boardDiv = document.querySelector('.board')
+  const boardDiv = document.querySelector('.board');
 
   const buildBoard = () => {
     boardDiv.textContent = '';
@@ -114,7 +132,33 @@ const displayController = (function() {
         boardDiv.appendChild(cellBtn);
       });
     });
-  }
+  };
+
+  const reset = () => {
+    const modal = document.querySelector('.modal');
+    const form = document.querySelector('form');
+    const cancelBtn = document.querySelector('#cancel-btn')
+    const playerOneInput = document.querySelector('#player-one');
+    const playerTwoInput = document.querySelector('#player-two');
+    modal.showModal();
+
+    cancelBtn.addEventListener('click', () => {
+      modal.close();
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault
+      gameController.newGame(playerOneInput.value, playerTwoInput.value);
+      buildBoard();
+      playerOneInput.value = '';
+      playerTwoInput.value = '';
+      message.textContent = gameController.getMessage();
+      modal.close();
+      e.stopImmediatePropagation();
+    });
+
+    buildBoard();
+  };
 
   function clickHandler(e) {
     const row = e.target.dataset.row;
@@ -126,6 +170,7 @@ const displayController = (function() {
     buildBoard();
   }
 
+  resetBtn.addEventListener('click', reset);
   boardDiv.addEventListener('click', clickHandler);
-  buildBoard();
+  reset();
 })();
